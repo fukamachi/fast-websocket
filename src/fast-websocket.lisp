@@ -31,7 +31,6 @@
 (defconstant +min-reserved-error+ 3000)
 (defconstant +max-reserved-error+ 4999)
 
-;; TODO: too-long error
 (defun make-payload-callback (ws message-callback ping-callback pong-callback close-callback)
   (declare (type (or null function)
                  message-callback ping-callback pong-callback close-callback))
@@ -104,14 +103,17 @@
 
 (defun make-parser (ws &key
                          (require-masking t)
+                         (max-length #x3ffffff)
                          message-callback  ;; (message)
                          ping-callback     ;; (payload &key start end)
                          pong-callback     ;; (payload &key start end)
                          close-callback)   ;; (payload &key start end code)
-  (make-ll-parser ws :require-masking require-masking
-                     :payload-callback
-                     (make-payload-callback ws
-                                            message-callback
-                                            ping-callback
-                                            pong-callback
-                                            close-callback)))
+  (make-ll-parser ws
+                  :require-masking require-masking
+                  :max-length max-length
+                  :payload-callback
+                  (make-payload-callback ws
+                                         message-callback
+                                         ping-callback
+                                         pong-callback
+                                         close-callback)))

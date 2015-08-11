@@ -73,8 +73,9 @@
 (deftype octet () '(unsigned-byte 8))
 (deftype octets () '(simple-array octet (*)))
 
-(defun make-ll-parser (ws &key require-masking payload-callback)
-  (declare (type (or null function) payload-callback))
+(defun make-ll-parser (ws &key require-masking (max-length #x3ffffff) payload-callback)
+  (declare (type (or null function) payload-callback)
+           (type fixnum max-length))
   (named-lambda parser (data &key (start 0) (end (length data)))
     (declare (type fixnum start end)
              (type octets data)
@@ -142,6 +143,8 @@
              (setf (ws-length ws) length)
              (cond
                ((<= 0 length 125)
+                (when (< max-length length)
+                  (error 'too-large :length length :max-length max-length))
                 (if (ws-mask ws)
                     (progn
                       (setf (ws-stage ws) 3)
@@ -158,15 +161,22 @@
            (go end))
 
          (let ((length 0))
-           (declare (type octet length))
+           (declare (type integer length))
+
            (dotimes (j (ws-length-size ws))
              (setf length (+ (ash length 8) (aref data i)))
              (incf i))
+
            (unless (or (fragmented-opcode-p (ws-opcode ws))
                        (<= length 125))
              (error 'protocol-error
                     :format-control "Received control frame having too long payload: ~A"
-                    :format-arguments (list length))))
+                    :format-arguments (list length)))
+
+           (when (< max-length length)
+             (error 'too-large :length length :max-length max-length))
+
+           (setf (ws-length ws) length))
 
          (if (ws-mask ws)
              (setf (ws-stage ws) 3)

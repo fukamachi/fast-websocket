@@ -7,6 +7,7 @@
   (:export #:websocket-error
            #:websocket-parse-error
            #:protocol-error
+           #:too-large
            #:unacceptable
 
            #:error-code
@@ -18,6 +19,16 @@
 (define-condition websocket-parse-error (websocket-error) ())
 
 (define-condition protocol-error (websocket-parse-error simple-error) ())
+
+(define-condition too-large (protocol-error)
+  ((length :initarg :length)
+   (max-length :initarg :max-length))
+  (:report
+   (lambda (condition stream)
+     (with-slots (length max-length) condition
+       (format stream "WebSocket frame length too large (~D exceeded the limit ~D)"
+               length
+               max-length)))))
 
 (define-condition unacceptable (protocol-error)
   ((require-masking :initarg :require-masking))
