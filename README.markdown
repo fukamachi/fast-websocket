@@ -1,6 +1,7 @@
 # fast-websocket
 
 [![Build Status](https://travis-ci.org/fukamachi/fast-websocket.svg?branch=master)](https://travis-ci.org/fukamachi/fast-websocket)
+[![Coverage Status](https://coveralls.io/repos/fukamachi/fast-websocket/badge.svg?branch=master)](https://coveralls.io/r/fukamachi/fast-websocket)
 [![Quicklisp dist](http://quickdocs.org/badge/fast-websocket.svg)](http://quickdocs.org/fast-websocket/)
 
 Optimized low-level WebSocket protocol parser.
