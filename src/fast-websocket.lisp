@@ -87,6 +87,7 @@
                  (funcall close-callback payload :start start :end (- end 2)
                                                  :code code)
                  (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
+                          :start 0 :end 0
                           :code code)))))
         (:ping
          (when ping-callback
