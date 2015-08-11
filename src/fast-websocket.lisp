@@ -108,12 +108,28 @@
                          ping-callback     ;; (payload &key start end)
                          pong-callback     ;; (payload &key start end)
                          close-callback)   ;; (payload &key start end code)
-  (make-ll-parser ws
-                  :require-masking require-masking
-                  :max-length max-length
-                  :payload-callback
-                  (make-payload-callback ws
-                                         message-callback
-                                         ping-callback
-                                         pong-callback
-                                         close-callback)))
+  (let ((parser
+          (make-ll-parser ws
+                          :require-masking require-masking
+                          :max-length max-length
+                          :payload-callback
+                          (make-payload-callback ws
+                                                 message-callback
+                                                 ping-callback
+                                                 pong-callback
+                                                 close-callback)))
+        (bufferedp nil)
+        (buffer (make-output-buffer)))
+    (lambda (data &key (start 0) end)
+      (when bufferedp
+        (fast-write-sequence data buffer start end)
+        (setq data (finish-output-buffer buffer))
+        (setq buffer (make-output-buffer)
+              bufferedp nil)
+        (setq start 0
+              end (length data)))
+      (multiple-value-bind (i eofp)
+          (funcall parser data :start start :end (or end (length data)))
+        (when eofp
+          (setq bufferedp t)
+          (fast-write-sequence data buffer i))))))

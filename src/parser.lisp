@@ -158,7 +158,8 @@
 
        parsing-extended-length
          (when (< end (+ i (ws-length-size ws)))
-           (go end))
+           (return-from parser
+             (values i t)))
 
          (let ((length 0))
            (declare (type integer length))
@@ -186,7 +187,8 @@
 
        parsing-masking-key
          (when (< end (+ i 4))
-           (go end))
+           (return-from parser
+             (values i t)))
 
          (dotimes (j 4)
            (setf (aref (ws-masking-key ws) j) (aref data i))
