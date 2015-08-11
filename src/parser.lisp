@@ -96,7 +96,7 @@
                 (fin (= (logand byte +fin+) +fin+)))
            (declare (type octet byte))
 
-           (dolist (rsv `(,+rsv1+ ,+rsv2+ ,+rsv3+))
+           (dolist (rsv (list +rsv1+ +rsv2+ +rsv3+))
              (when (= (logand byte rsv) rsv)
                (error 'protocol-error
                       :format-control "Reserved bit is on: ~A"
