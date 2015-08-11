@@ -37,6 +37,12 @@
      (format stream  "Recieved ~:[masked~;unmasked~] frame but masking is ~:*~:[not required~;required~]"
              (slot-value condition 'require-masking)))))
 
+(define-condition encoding-error (protocol-error) ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (format stream "Could not decode a text frame as UTF-8"))))
+
 (defparameter *error-codes-map*
   (plist-hash-table '(:normal-closure       1000
                       :going-away           1001
@@ -69,6 +75,7 @@
     (keyword (gethash error *error-codes-map*))
     (too-large      1009)
     (unacceptable   1003)
+    (encoding-error 1007)
     (protocol-error 1002)))
 
 (defun error-code-name (code)

@@ -10,6 +10,7 @@
                 #:mask-message)
   (:import-from :fast-websocket.error
                 #:protocol-error
+                #:encoding-error
                 #:valid-error-code-p
                 #:error-code)
   (:import-from :fast-io
@@ -17,7 +18,8 @@
                 #:finish-output-buffer
                 #:fast-write-sequence)
   (:import-from :trivial-utf-8
-                #:utf-8-bytes-to-string)
+                #:utf-8-bytes-to-string
+                #:utf-8-decoding-error)
   (:export #:make-parser
            #:ws
            #:make-ws
@@ -40,67 +42,70 @@
       (declare (optimize (speed 3) (safety 2))
                (type (simple-array (unsigned-byte 8) (*)) payload)
                (type integer start end))
-      (ecase (opcode-name (ws-opcode ws))
-        (:continuation
-         (fast-write-sequence payload buffer start end)
-         (when (ws-fin ws)
-           (let ((message (finish-output-buffer buffer)))
-             (when (ws-mask ws)
-               (mask-message message (ws-masking-key ws)))
-             (setf buffer (make-output-buffer))
-             (when message-callback
-               (funcall (the function message-callback)
-                        (if (eq (ws-mode ws) :text)
-                            (utf-8-bytes-to-string message)
-                            message))))))
-        (:text
-         (if (ws-fin ws)
-             (when message-callback
-               (funcall (the function message-callback)
-                        (if (ws-mask ws)
-                            (utf-8-bytes-to-string
-                             (let ((payload (subseq payload start end)))
-                               (mask-message payload (ws-masking-key ws))))
-                            (utf-8-bytes-to-string payload
-                                                   :start start :end end))))
-             (fast-write-sequence payload buffer start end)))
-        (:binary
-         (if (ws-fin ws)
-             (when message-callback
-               (funcall message-callback
-                        (if (ws-mask ws)
-                            (let ((payload (subseq payload start end)))
-                              (mask-message payload (ws-masking-key ws)))
-                            (subseq payload start end))))
-             (fast-write-sequence payload buffer start end)))
-        (:close
-         (let* ((length (- end start))
-                (code (if (<= 2 length)
-                          (* 256 (aref payload start) (aref payload (1+ start)))
-                          nil)))
-           (declare (type integer length))
-           (unless (or (zerop length)
-                       (and code
-                            (<= +min-reserved-error+ code +max-reserved-error+))
-                       (valid-error-code-p code))
-             (setq code (error-code :protocol-error)))
+      (handler-case
+          (ecase (opcode-name (ws-opcode ws))
+            (:continuation
+             (fast-write-sequence payload buffer start end)
+             (when (ws-fin ws)
+               (let ((message (finish-output-buffer buffer)))
+                 (when (ws-mask ws)
+                   (mask-message message (ws-masking-key ws)))
+                 (setf buffer (make-output-buffer))
+                 (when message-callback
+                   (funcall (the function message-callback)
+                            (if (eq (ws-mode ws) :text)
+                                (utf-8-bytes-to-string message)
+                                message))))))
+            (:text
+             (if (ws-fin ws)
+                 (when message-callback
+                   (funcall (the function message-callback)
+                            (if (ws-mask ws)
+                                (utf-8-bytes-to-string
+                                 (let ((payload (subseq payload start end)))
+                                   (mask-message payload (ws-masking-key ws))))
+                                (utf-8-bytes-to-string payload
+                                                       :start start :end end))))
+                 (fast-write-sequence payload buffer start end)))
+            (:binary
+             (if (ws-fin ws)
+                 (when message-callback
+                   (funcall message-callback
+                            (if (ws-mask ws)
+                                (let ((payload (subseq payload start end)))
+                                  (mask-message payload (ws-masking-key ws)))
+                                (subseq payload start end))))
+                 (fast-write-sequence payload buffer start end)))
+            (:close
+             (let* ((length (- end start))
+                    (code (if (<= 2 length)
+                              (* 256 (aref payload start) (aref payload (1+ start)))
+                              nil)))
+               (declare (type integer length))
+               (unless (or (zerop length)
+                           (and code
+                                (<= +min-reserved-error+ code +max-reserved-error+))
+                           (valid-error-code-p code))
+                 (setq code (error-code :protocol-error)))
 
-           (when (< length 125)
-             (setq code (error-code :protocol-error)))
+               (when (< length 125)
+                 (setq code (error-code :protocol-error)))
 
-           (when close-callback
-             (if (<= 2 length)
-                 (funcall close-callback payload :start start :end (- end 2)
-                                                 :code code)
-                 (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
-                          :start 0 :end 0
-                          :code code)))))
-        (:ping
-         (when ping-callback
-           (funcall (the function ping-callback) payload :start start :end end)))
-        (:pong
-         (when pong-callback
-           (funcall (the function pong-callback) payload :start start :end end)))))))
+               (when close-callback
+                 (if (<= 2 length)
+                     (funcall close-callback payload :start start :end (- end 2)
+                                                     :code code)
+                     (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
+                              :start 0 :end 0
+                              :code code)))))
+            (:ping
+             (when ping-callback
+               (funcall (the function ping-callback) payload :start start :end end)))
+            (:pong
+             (when pong-callback
+               (funcall (the function pong-callback) payload :start start :end end))))
+        (utf-8-decoding-error ()
+          (error 'encoding-error))))))
 
 (defun make-parser (ws &key
                          (require-masking t)
