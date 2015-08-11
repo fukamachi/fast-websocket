@@ -12,11 +12,15 @@
   :author "Eitaro Fukamachi"
   :license "BSD 2-Clause"
   :depends-on (:fast-websocket
+               :babel
+               :fast-io
                :prove)
   :components ((:module "t"
                 :components
                 ((:test-file "parser")
-                 (:test-file "fast-websocket"))))
+                 (:test-file "payload")
+                 (:test-file "fast-websocket")
+                 (:file "util"))))
   :description "Test system for fast-websocket"
 
   :defsystem-depends-on (:prove-asdf)

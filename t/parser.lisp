@@ -4,13 +4,11 @@
         :fast-websocket.parser
         :fast-websocket.ws
         :fast-websocket.error
+        :fast-websocket-test.util
         :prove))
 (in-package :fast-websocket-test.parser)
 
-(plan nil)
-
-(defun bv (&rest args)
-  (make-array (length args) :element-type '(unsigned-byte 8) :initial-contents args))
+(plan 5)
 
 (defvar *masked*
   (bv #x81 #x85 #x37 #xfa #x21 #x3d #x7f #x9f #x4d #x51 #x58))

@@ -19,7 +19,13 @@
                 #:octets-to-string)
   (:export #:make-parser
            #:ws
-           #:make-ws))
+           #:make-ws
+           #:ws-fin
+           #:ws-opcode
+           #:ws-mask
+           #:ws-masking-key
+           #:ws-length
+           #:ws-stage))
 (in-package :fast-websocket)
 
 (defconstant +min-reserved-error+ 3000)
