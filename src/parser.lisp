@@ -205,7 +205,9 @@
              (setf (ws-mode ws) nil))
 
            (if read-a-part
-               (decf (ws-length ws) (- end i))
+               (progn
+                 (decf (ws-length ws) (- end i))
+                 (setq i next-end))
                (progn
                  (setf (ws-stage ws) 0)
 
