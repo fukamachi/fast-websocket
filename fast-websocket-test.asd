@@ -12,7 +12,7 @@
   :author "Eitaro Fukamachi"
   :license "BSD 2-Clause"
   :depends-on (:fast-websocket
-               :babel
+               :trivial-utf-8
                :fast-io
                :prove)
   :components ((:module "t"

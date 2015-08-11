@@ -17,7 +17,7 @@
   :author "Eitaro Fukamachi"
   :license "BSD 2-Clause"
   :depends-on (:fast-io
-               :babel
+               :trivial-utf-8
                :alexandria)
   :components ((:module "src"
                 :components

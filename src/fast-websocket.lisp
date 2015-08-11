@@ -15,8 +15,8 @@
                 #:make-output-buffer
                 #:finish-output-buffer
                 #:fast-write-sequence)
-  (:import-from :babel
-                #:octets-to-string)
+  (:import-from :trivial-utf-8
+                #:utf-8-bytes-to-string)
   (:export #:make-parser
            #:ws
            #:make-ws
@@ -46,19 +46,18 @@
              (when message-callback
                (funcall message-callback
                         (if (eq (ws-mode ws) :text)
-                            (octets-to-string message :encoding :utf-8)
+                            (utf-8-bytes-to-string message)
                             message))))))
         (:text
          (if (ws-fin ws)
              (when message-callback
                (funcall message-callback
                         (if (ws-mask ws)
-                            (octets-to-string
+                            (utf-8-bytes-to-string
                              (let ((payload (subseq payload start end)))
-                               (mask-message payload (ws-masking-key ws)))
-                             :encoding :utf-8)
-                            (octets-to-string payload :encoding :utf-8
-                                                      :start start :end end))))
+                               (mask-message payload (ws-masking-key ws))))
+                            (utf-8-bytes-to-string payload
+                                                   :start start :end end))))
              (fast-write-sequence payload buffer start end)))
         (:binary
          (if (ws-fin ws)

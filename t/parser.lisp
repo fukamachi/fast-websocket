@@ -5,6 +5,7 @@
         :fast-websocket.ws
         :fast-websocket.error
         :fast-websocket-test.util
+        :trivial-utf-8
         :prove))
 (in-package :fast-websocket-test.parser)
 
@@ -55,14 +56,12 @@
                                    (setf body (subseq data start end))))))
     (funcall parser *not-masked*)
     (is (ws-stage ws) 0)
-    (is (babel:octets-to-string body) "Hello")))
+    (is (utf-8-bytes-to-string body) "Hello")))
 
 (subtest "incomplete frames"
   (let* ((ws (make-ws))
          (parser (make-ll-parser ws
-                                 :require-masking nil
-                                 :payload-callback
-                                 (lambda (data &key start end)))))
+                                 :require-masking nil)))
     (funcall parser (subseq *not-masked* 0 1))
     (is (ws-stage ws) 1)
     (funcall parser (subseq *not-masked* 1 2))
@@ -97,7 +96,7 @@
                                  :require-masking nil
                                  :payload-callback
                                  (lambda (data &key start end)
-                                   (princ (babel:octets-to-string data :start start :end end) body)))))
+                                   (princ (utf-8-bytes-to-string data :start start :end end) body)))))
     (funcall parser (bv #x01 #x03 #x48 #x65 #x6c))
     (is (ws-stage ws) 0 "1st frame ended")
     (is (ws-fin ws) nil "not the last frame")
@@ -121,6 +120,6 @@
     (is (ws-stage ws) 0 "frame ended")
     (is (ws-fin ws) t)
     (is (opcode-name (ws-opcode ws)) :ping)
-    (is (babel:octets-to-string body) "Hello")))
+    (is (utf-8-bytes-to-string body) "Hello")))
 
 (finalize)
