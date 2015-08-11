@@ -7,7 +7,7 @@ env:
     - PATH=~/.roswell/bin:$PATH
     - ROSWELL_BRANCH=release
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
-    - COVERAGE_EXCLUDE=t/
+    - COVERAGE_EXCLUDE=t/:src/error.lisp
   matrix:
     - LISP=sbcl-bin COVERALLS=true
     - LISP=ccl-bin
