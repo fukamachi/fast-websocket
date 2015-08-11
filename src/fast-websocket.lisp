@@ -1,0 +1,110 @@
+(in-package :cl-user)
+(defpackage fast-websocket
+  (:use :cl
+        #:fast-websocket.ws)
+  (:import-from :fast-websocket.parser
+                #:make-ll-parser
+                #:opcode-name)
+  (:import-from :fast-websocket.payload
+                #:fast-write-masked-sequence
+                #:mask-message)
+  (:import-from :fast-websocket.error
+                #:valid-error-code-p
+                #:error-code)
+  (:import-from :fast-io
+                #:make-output-buffer
+                #:finish-output-buffer
+                #:fast-write-sequence)
+  (:import-from :babel
+                #:octets-to-string)
+  (:export #:make-parser
+           #:ws
+           #:make-ws))
+(in-package :fast-websocket)
+
+(defconstant +min-reserved-error+ 3000)
+(defconstant +max-reserved-error+ 4999)
+
+;; TODO: too-long error
+(defun make-payload-callback (ws message-callback pong-callback close-callback send-fn)
+  (let ((buffer (make-output-buffer)))
+    (lambda (payload &key (start 0) end)
+      (ecase (opcode-name (ws-opcode ws))
+        (:continuation
+         (fast-write-sequence payload buffer start end)
+         (when (ws-fin ws)
+           (let ((message (finish-output-buffer buffer)))
+             (when (ws-mask ws)
+               (mask-message message (ws-masking-key ws)))
+             (setf buffer (make-output-buffer))
+             (when message-callback
+               (funcall message-callback
+                        (if (eq (ws-mode ws) :text)
+                            (octets-to-string message :encoding :utf-8)
+                            message))))))
+        (:text
+         (if (ws-fin ws)
+             (when message-callback
+               (funcall message-callback
+                        (if (ws-mask ws)
+                            (octets-to-string
+                             (let ((payload (subseq payload start end)))
+                               (mask-message payload (ws-masking-key ws)))
+                             :encoding :utf-8)
+                            (octets-to-string payload :encoding :utf-8
+                                                      :start start :end end))))
+             (fast-write-sequence payload buffer start end)))
+        (:binary
+         (if (ws-fin ws)
+             (when message-callback
+               (funcall message-callback
+                        (if (ws-mask ws)
+                            (let ((payload (subseq payload start end)))
+                              (mask-message payload (ws-masking-key ws)))
+                            payload)))
+             (fast-write-sequence payload buffer start end)))
+        (:close
+         (let* ((length (- end start))
+                (code (if (<= 2 length)
+                          (* 256 (aref payload start) (aref payload (1+ start)))
+                          nil)))
+           (unless (or (zerop length)
+                       (and code
+                            (<= +min-reserved-error+ code +max-reserved-error+))
+                       (valid-error-code-p code))
+             (setq code (error-code :protocol-error)))
+
+           (when (< length 125)
+             (setq code (error-code :protocol-error)))
+
+           (when send-fn
+             (if (<= 2 length)
+                 (funcall send-fn payload :start start :end (- end 2)
+                          :type :close
+                          :code code)
+                 (funcall send-fn #.(make-array 0 :element-type '(unsigned-byte 8))
+                          :type :close
+                          :code code)))
+           (when close-callback
+             (funcall close-callback))))
+        (:ping
+         (when send-fn
+           (funcall send-fn payload :start start :end end
+                    :type :pong)))
+        (:pong
+         (when pong-callback
+           (funcall pong-callback (subseq payload start end))))))))
+
+(defun make-parser (ws &key
+                         (require-masking t)
+                         message-callback  ;; (message)
+                         pong-callback     ;; (payload &key start end)
+                         close-callback    ;; ()
+                         send-fn)          ;; (payload &key start end type code)
+  (make-ll-parser ws :require-masking require-masking
+                     :payload-callback
+                     (make-payload-callback ws
+                                            message-callback
+                                            pong-callback
+                                            close-callback
+                                            send-fn)))
