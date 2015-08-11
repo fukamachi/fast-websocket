@@ -20,6 +20,7 @@
                 ((:test-file "parser")
                  (:test-file "payload")
                  (:test-file "fast-websocket")
+                 (:file "benchmark")
                  (:file "util"))))
   :description "Test system for fast-websocket"
 
