@@ -33,8 +33,13 @@
 
 ;; TODO: too-long error
 (defun make-payload-callback (ws message-callback ping-callback pong-callback close-callback)
+  (declare (type (or null function)
+                 message-callback ping-callback pong-callback close-callback))
   (let ((buffer (make-output-buffer)))
-    (lambda (payload &key (start 0) end)
+    (lambda (payload &key (start 0) (end (length payload)))
+      (declare (optimize (speed 3) (safety 2))
+               (type (simple-array (unsigned-byte 8) (*)) payload)
+               (type integer start end))
       (ecase (opcode-name (ws-opcode ws))
         (:continuation
          (fast-write-sequence payload buffer start end)
@@ -44,14 +49,14 @@
                (mask-message message (ws-masking-key ws)))
              (setf buffer (make-output-buffer))
              (when message-callback
-               (funcall message-callback
+               (funcall (the function message-callback)
                         (if (eq (ws-mode ws) :text)
                             (utf-8-bytes-to-string message)
                             message))))))
         (:text
          (if (ws-fin ws)
              (when message-callback
-               (funcall message-callback
+               (funcall (the function message-callback)
                         (if (ws-mask ws)
                             (utf-8-bytes-to-string
                              (let ((payload (subseq payload start end)))
@@ -73,6 +78,7 @@
                 (code (if (<= 2 length)
                           (* 256 (aref payload start) (aref payload (1+ start)))
                           nil)))
+           (declare (type integer length))
            (unless (or (zerop length)
                        (and code
                             (<= +min-reserved-error+ code +max-reserved-error+))
@@ -91,10 +97,10 @@
                           :code code)))))
         (:ping
          (when ping-callback
-           (funcall ping-callback payload :start start :end end)))
+           (funcall (the function ping-callback) payload :start start :end end)))
         (:pong
          (when pong-callback
-           (funcall pong-callback payload :start start :end end)))))))
+           (funcall (the function pong-callback) payload :start start :end end)))))))
 
 (defun make-parser (ws &key
                          (require-masking t)
