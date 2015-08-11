@@ -18,6 +18,7 @@ git clone https://github.com/fukamachi/fast-websocket
 
 ## See Also
 
+* [RFC 6455](https://tools.ietf.org/html/rfc6455)
 * [websocket-driver](https://github.com/fukamachi/websocket-driver)
 
 ## Author
