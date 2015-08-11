@@ -45,7 +45,7 @@
   (defun opcode (name)
     (gethash name *opcodes-name-map*)))
 
-(defvar *opcode-valid-array*
+(defparameter *opcode-valid-array*
   (let ((ary (make-array 11 :element-type 'fixnum :initial-element 0)))
     (dolist (code (hash-table-keys *opcodes-map*) ary)
       (setf (aref ary code) 1))))
@@ -54,7 +54,7 @@
   (and (< opcode 11)
        (= (aref *opcode-valid-array* opcode) 1)))
 
-(defvar *fragmented-opcodes*
+(defparameter *fragmented-opcodes*
   (let ((ary (make-array 11 :element-type 'fixnum :initial-element 0)))
     (dolist (key '(0 1 2) ary)
       (setf (aref ary key) 1))))
@@ -62,7 +62,7 @@
 (defun fragmented-opcode-p (opcode)
   (= (aref *fragmented-opcodes* opcode) 1))
 
-(defvar *opening-opcodes*
+(defparameter *opening-opcodes*
   (let ((ary (make-array 11 :element-type 'fixnum :initial-element 0)))
     (dolist (key '(1 2) ary)
       (setf (aref ary key) 1))))
