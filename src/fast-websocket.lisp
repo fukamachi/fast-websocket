@@ -1,10 +1,12 @@
 (in-package :cl-user)
 (defpackage fast-websocket
   (:use :cl
+        #:fast-websocket.constants
         #:fast-websocket.ws)
   (:import-from :fast-websocket.parser
-                #:make-ll-parser
-                #:opcode-name)
+                #:make-ll-parser)
+  (:import-from :fast-websocket.compose
+                #:compose-frame)
   (:import-from :fast-websocket.payload
                 #:fast-write-masked-sequence
                 #:mask-message)
@@ -21,6 +23,7 @@
                 #:utf-8-bytes-to-string
                 #:utf-8-decoding-error)
   (:export #:make-parser
+           #:compose-frame
            #:ws
            #:make-ws
            #:ws-fin

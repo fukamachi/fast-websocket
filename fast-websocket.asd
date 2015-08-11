@@ -21,10 +21,12 @@
                :alexandria)
   :components ((:module "src"
                 :components
-                ((:file "fast-websocket" :depends-on ("ws" "parser" "payload" "error"))
+                ((:file "fast-websocket" :depends-on ("ws" "parser" "compose" "payload" "constants" "error"))
                  (:file "ws")
-                 (:file "parser" :depends-on ("ws" "error"))
+                 (:file "parser" :depends-on ("ws" "constants" "error"))
+                 (:file "compose" :depends-on ("constants" "payload"))
                  (:file "payload")
+                 (:file "constants")
                  (:file "error"))))
   :description "Optimized WebSocket protocol parser"
   :long-description

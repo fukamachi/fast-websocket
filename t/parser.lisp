@@ -1,6 +1,7 @@
 (in-package :cl-user)
 (defpackage fast-websocket-test.parser
   (:use :cl
+        :fast-websocket.constants
         :fast-websocket.parser
         :fast-websocket.ws
         :fast-websocket.error
