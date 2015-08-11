@@ -66,7 +66,7 @@
                         (if (ws-mask ws)
                             (let ((payload (subseq payload start end)))
                               (mask-message payload (ws-masking-key ws)))
-                            payload)))
+                            (subseq payload start end))))
              (fast-write-sequence payload buffer start end)))
         (:close
          (let* ((length (- end start))
