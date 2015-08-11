@@ -25,7 +25,7 @@
             (,next-mask-index *mask-key-indices* (cdr ,next-mask-index)))
            ((= ,i (or ,end (length ,data)))
             ,data)
-         (let ((,byte (mask-byte (aref ,data ,i) (aref mask-keys (car ,next-mask-index)))))
+         (let ((,byte (mask-byte (aref ,data ,i) (aref ,mask-keys (car ,next-mask-index)))))
            ,@body)))))
 
 (defun fast-write-masked-sequence (data output-buffer mask-keys &optional start end)
