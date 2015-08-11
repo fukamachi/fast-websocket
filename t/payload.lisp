@@ -6,7 +6,7 @@
         :prove))
 (in-package :fast-websocket-test.payload)
 
-(plan 2)
+(plan 3)
 
 (defvar *mask-keys*
   (bv 92 246 238 121))
@@ -22,5 +22,15 @@
     #(20 147 130 21 51)
     :test #'equalp
     "fast-write-masked-sequence")
+
+(is-print (fast-websocket.payload::with-masking (byte (babel:string-to-octets "Hello") :mask-keys *mask-keys*)
+            (format t "~A~%" byte))
+          "20
+147
+130
+21
+51
+"
+          "with-masking")
 
 (finalize)
