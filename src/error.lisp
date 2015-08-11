@@ -65,7 +65,11 @@
   (hash-table-values *error-codes-map*))
 
 (defun error-code (error)
-  (gethash error *error-codes-map*))
+  (etypecase error
+    (keyword (gethash error *error-codes-map*))
+    (too-large      1009)
+    (unacceptable   1003)
+    (protocol-error 1002)))
 
 (defun error-code-name (code)
   (gethash code *error-codes-name-map*))

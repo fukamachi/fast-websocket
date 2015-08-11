@@ -9,6 +9,7 @@
                 #:fast-write-masked-sequence
                 #:mask-message)
   (:import-from :fast-websocket.error
+                #:protocol-error
                 #:valid-error-code-p
                 #:error-code)
   (:import-from :fast-io
@@ -107,7 +108,9 @@
                          message-callback  ;; (message)
                          ping-callback     ;; (payload &key start end)
                          pong-callback     ;; (payload &key start end)
-                         close-callback)   ;; (payload &key start end code)
+                         close-callback    ;; (payload &key start end code)
+                         error-callback)   ;; (code reason)
+  (declare (type (or null function) error-callback))
   (let ((parser
           (make-ll-parser ws
                           :require-masking require-masking
@@ -129,7 +132,13 @@
         (setq start 0
               end (length data)))
       (multiple-value-bind (i eofp)
-          (funcall parser data :start start :end (or end (length data)))
+          (handler-case
+              (funcall parser data :start start :end (or end (length data)))
+            (protocol-error (e)
+              (when error-callback
+                (funcall (the function error-callback)
+                         (error-code e)
+                         (princ-to-string e)))))
         (when eofp
           (setq bufferedp t)
           (fast-write-sequence data buffer i))))))
