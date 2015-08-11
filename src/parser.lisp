@@ -71,10 +71,14 @@
   (= (aref *opening-opcodes* opcode) 1))
 
 (deftype octet () '(unsigned-byte 8))
+(deftype octets () '(simple-array octet (*)))
 
 (defun make-ll-parser (ws &key require-masking payload-callback)
+  (declare (type (or null function) payload-callback))
   (named-lambda parser (data &key (start 0) (end (length data)))
-    (declare (type fixnum start end))
+    (declare (type fixnum start end)
+             (type octets data)
+             (optimize (speed 3) (safety 2)))
     (when (= start end)
       (return-from parser start))
     (let ((i start))
@@ -184,6 +188,7 @@
          (let* ((payload-end (+ i (ws-length ws)))
                 (read-a-part (< end payload-end))
                 (next-end (if read-a-part end payload-end)))
+           (declare (type integer payload-end))
            (case (opcode-name (ws-opcode ws))
              (:continuation
               (unless (ws-mode ws)
@@ -195,7 +200,7 @@
                         (setf (ws-mode ws) :binary))))
 
            (when payload-callback
-             (funcall payload-callback
+             (funcall (the function payload-callback)
                       data
                       :start i
                       :end next-end))
