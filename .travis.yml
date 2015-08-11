@@ -21,6 +21,7 @@ install:
 cache:
   directories:
     - $HOME/.roswell
+    - $HOME/.config/common-lisp
 
 script:
   - run-prove fast-websocket-test.asd
