@@ -32,7 +32,7 @@
 (defconstant +max-reserved-error+ 4999)
 
 ;; TODO: too-long error
-(defun make-payload-callback (ws message-callback pong-callback close-callback send-fn)
+(defun make-payload-callback (ws message-callback ping-callback pong-callback close-callback)
   (let ((buffer (make-output-buffer)))
     (lambda (payload &key (start 0) end)
       (ecase (opcode-name (ws-opcode ws))
@@ -89,23 +89,22 @@
                  (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
                           :code code)))))
         (:ping
-         (when send-fn
-           (funcall send-fn payload :start start :end end
-                    :type :pong)))
+         (when ping-callback
+           (funcall ping-callback payload :start start :end end)))
         (:pong
          (when pong-callback
-           (funcall pong-callback (subseq payload start end))))))))
+           (funcall pong-callback payload :start start :end end)))))))
 
 (defun make-parser (ws &key
                          (require-masking t)
                          message-callback  ;; (message)
+                         ping-callback     ;; (payload &key start end)
                          pong-callback     ;; (payload &key start end)
-                         close-callback    ;; (payload &key start end code)
-                         send-fn)          ;; (payload &key start end type)
+                         close-callback)   ;; (payload &key start end code)
   (make-ll-parser ws :require-masking require-masking
                      :payload-callback
                      (make-payload-callback ws
                                             message-callback
+                                            ping-callback
                                             pong-callback
-                                            close-callback
-                                            send-fn)))
+                                            close-callback)))
