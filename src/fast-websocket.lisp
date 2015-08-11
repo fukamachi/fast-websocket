@@ -82,16 +82,12 @@
            (when (< length 125)
              (setq code (error-code :protocol-error)))
 
-           (when send-fn
-             (if (<= 2 length)
-                 (funcall send-fn payload :start start :end (- end 2)
-                          :type :close
-                          :code code)
-                 (funcall send-fn #.(make-array 0 :element-type '(unsigned-byte 8))
-                          :type :close
-                          :code code)))
            (when close-callback
-             (funcall close-callback))))
+             (if (<= 2 length)
+                 (funcall close-callback payload :start start :end (- end 2)
+                                                 :code code)
+                 (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
+                          :code code)))))
         (:ping
          (when send-fn
            (funcall send-fn payload :start start :end end
@@ -104,8 +100,8 @@
                          (require-masking t)
                          message-callback  ;; (message)
                          pong-callback     ;; (payload &key start end)
-                         close-callback    ;; ()
-                         send-fn)          ;; (payload &key start end type code)
+                         close-callback    ;; (payload &key start end code)
+                         send-fn)          ;; (payload &key start end type)
   (make-ll-parser ws :require-masking require-masking
                      :payload-callback
                      (make-payload-callback ws
