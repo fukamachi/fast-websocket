@@ -31,7 +31,8 @@
            #:ws-mask
            #:ws-masking-key
            #:ws-length
-           #:ws-stage))
+           #:ws-stage
+           #:error-code))
 (in-package :fast-websocket)
 
 (defconstant +min-reserved-error+ 3000)
