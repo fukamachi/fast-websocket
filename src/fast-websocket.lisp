@@ -13,7 +13,7 @@
   (:import-from :fast-websocket.error
                 #:protocol-error
                 #:encoding-error
-                #:valid-error-code-p
+                #:acceptable-error-code-p
                 #:error-code)
   (:import-from :fast-io
                 #:make-output-buffer
@@ -34,9 +34,6 @@
            #:ws-stage
            #:error-code))
 (in-package :fast-websocket)
-
-(defconstant +min-reserved-error+ 3000)
-(defconstant +max-reserved-error+ 4999)
 
 (defun make-payload-callback (ws message-callback ping-callback pong-callback close-callback)
   (declare (type (or null function)
@@ -93,9 +90,7 @@
                           nil)))
            (declare (type integer length))
            (unless (or (zerop length)
-                       (and code
-                            (<= +min-reserved-error+ code +max-reserved-error+))
-                       (valid-error-code-p code))
+                       (acceptable-error-code-p code))
              (setq code (error-code :protocol-error)))
 
            (cond

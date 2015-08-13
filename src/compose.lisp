@@ -5,7 +5,8 @@
   (:import-from :fast-websocket.payload
                 #:mask-message)
   (:import-from :fast-websocket.error
-                #:error-code)
+                #:error-code
+                #:acceptable-error-code-p)
   (:import-from :fast-io
                 #:with-fast-output
                 #:fast-write-sequence
@@ -27,9 +28,11 @@
   (unless type
     (setq type (if (stringp data) :text :binary)))
 
-  (when (and (eq type :close)
-             (null code))
-    (setq code (error-code :normal-closure)))
+  (when (eq type :close)
+    (if code
+        (unless (acceptable-error-code-p code)
+          (error "Invalid error code: ~S" code))
+        (setq code (error-code :normal-closure))))
 
   (when (stringp data)
     ;; XXX: trivial-utf-8 doesn't seem to take 'start' and 'end'. Using subseq instead.

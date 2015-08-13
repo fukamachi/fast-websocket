@@ -12,8 +12,12 @@
 
            #:error-code
            #:error-code-name
-           #:valid-error-code-p))
+           #:valid-error-code-p
+           #:acceptable-error-code-p))
 (in-package :fast-websocket.error)
+
+(defconstant +min-reserved-error+ 3000)
+(defconstant +max-reserved-error+ 4999)
 
 (define-condition websocket-error (error) ())
 (define-condition websocket-parse-error (websocket-error) ())
@@ -83,3 +87,8 @@
 
 (defun valid-error-code-p (code)
   (not (null (error-code-name code))))
+
+(defun acceptable-error-code-p (code)
+  (and (integerp code)
+       (or (<= +min-reserved-error+ code +max-reserved-error+)
+           (valid-error-code-p code))))
