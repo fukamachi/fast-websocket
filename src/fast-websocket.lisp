@@ -102,10 +102,16 @@
                         :code code))))
         (:ping
          (when ping-callback
-           (funcall (the function ping-callback) (subseq payload start end))))
+           (let ((payload (subseq payload start end)))
+             (when (ws-mask ws)
+               (mask-message payload (ws-masking-key ws)))
+             (funcall (the function ping-callback) payload))))
         (:pong
          (when pong-callback
-           (funcall (the function pong-callback) (subseq payload start end))))))))
+           (let ((payload (subseq payload start end)))
+             (when (ws-mask ws)
+               (mask-message payload (ws-masking-key ws)))
+             (funcall (the function pong-callback) payload))))))))
 
 (defun make-parser (ws &key
                          (require-masking t)
