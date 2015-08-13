@@ -9,7 +9,7 @@
         :prove))
 (in-package :fast-websocket-test)
 
-(plan 4)
+(plan 7)
 
 (defvar *frame*
   (bv #x81 #x05 #x48 #x65 #x6c #x6c #x6f))
@@ -44,6 +44,19 @@
     (is (ws-stage ws) 0 "2nd frame ended")
     (is (get-output-stream-string body) "Hello")))
 
+(subtest ":binary frame"
+  (let* ((ws (make-ws))
+         (body (make-string-output-stream))
+         (parser (make-parser ws
+                              :require-masking nil
+                              :message-callback
+                              (lambda (message)
+                                (princ message body)))))
+    (funcall parser (bv 130 15 227 129 147 227 130 147 227 129 171 227 129 161 227 129 175))
+    (is (opcode-name (ws-opcode ws)) :binary)
+    (is (get-output-stream-string body)
+        (princ-to-string (string-to-utf-8-bytes "こんにちは")))))
+
 (subtest ":close frame"
   (let* ((ws (make-ws))
          got-code
@@ -55,7 +68,7 @@
                                 (setq got-code code)
                                 (princ (utf-8-bytes-to-string message) body)))))
     (funcall parser (bv 136 5 3 232 98 121 101))
-    (is (ws-opcode ws) (opcode :close))
+    (is (opcode-name (ws-opcode ws)) :close)
     (is (get-output-stream-string body) "bye")
     (is (error-code-name got-code) :normal-closure)))
 
