@@ -87,7 +87,8 @@
              (fast-write-sequence payload buffer start end)))
         (:close
          (let* ((length (- end start))
-                (code (if (<= 2 length)
+                (has-code (<= 2 length))
+                (code (if has-code
                           (+ (* 256 (aref payload start)) (aref payload (1+ start)))
                           nil)))
            (declare (type integer length))
@@ -97,16 +98,17 @@
                        (valid-error-code-p code))
              (setq code (error-code :protocol-error)))
 
-           (when (< length 125)
-             (setq code (error-code :protocol-error)))
-
-           (when close-callback
-             (if (<= 2 length)
-                 (funcall close-callback payload :start start :end (- end 2)
-                                                 :code code)
-                 (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
-                          :start 0 :end 0
-                          :code code)))))
+           (cond
+             ((and has-code
+                   (ws-mask ws))
+              (let ((reason (subseq payload (+ start 2) end)))
+                (mask-message reason (ws-masking-key ws))
+                (funcall close-callback reason :start 0 :end (length reason) :code code)))
+             (has-code
+              (funcall close-callback payload :start (+ start 2) :end end :code code))
+             (t (funcall close-callback (make-array 0 :element-type '(unsigned-byte 8))
+                         :start 0 :end 0
+                         :code code)))))
         (:ping
          (when ping-callback
            (funcall (the function ping-callback) payload :start start :end end)))
