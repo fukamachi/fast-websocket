@@ -88,7 +88,7 @@
         (:close
          (let* ((length (- end start))
                 (code (if (<= 2 length)
-                          (* 256 (aref payload start) (aref payload (1+ start)))
+                          (+ (* 256 (aref payload start)) (aref payload (1+ start)))
                           nil)))
            (declare (type integer length))
            (unless (or (zerop length)
