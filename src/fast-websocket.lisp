@@ -32,6 +32,8 @@
            #:ws-masking-key
            #:ws-length
            #:ws-stage
+           #:opcode
+           #:opcode-name
            #:error-code))
 (in-package :fast-websocket)
 
