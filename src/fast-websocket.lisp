@@ -135,7 +135,10 @@
                                                  close-callback)))
         (bufferedp nil)
         (buffer (make-output-buffer)))
-    (lambda (data &key (start 0) end)
+    (lambda (data &key start end)
+      (setq start (or start 0)
+            end   (or end (length data)))
+
       (when bufferedp
         (fast-write-sequence data buffer start end)
         (setq data (finish-output-buffer buffer))
