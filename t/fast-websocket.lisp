@@ -59,4 +59,66 @@
     (is (get-output-stream-string body) "bye")
     (is (error-code-name got-code) :normal-closure)))
 
+(subtest ":ping frame"
+  (let* ((ws (make-ws))
+         (body (make-string-output-stream))
+         (parser (make-parser ws
+                              :require-masking nil
+                              :ping-callback
+                              (lambda (payload)
+                                (princ (utf-8-bytes-to-string payload) body)))))
+    (funcall parser (bv 137 0))
+    (is (opcode-name (ws-opcode ws)) :ping)
+    (is (get-output-stream-string body) "")
+
+    (funcall parser (bv 137 2 104 105))
+    (is (opcode-name (ws-opcode ws)) :ping)
+    (is (get-output-stream-string body) "hi"))
+
+  (let* ((ws (make-ws))
+         (body (make-string-output-stream))
+         (parser (make-parser ws
+                              :require-masking t
+                              :ping-callback
+                              (lambda (payload)
+                                (princ (utf-8-bytes-to-string payload) body)))))
+    (funcall parser (bv 137 128 230 106 10 164))
+    (is (opcode-name (ws-opcode ws)) :ping)
+    (is (get-output-stream-string body) "")
+
+    (funcall parser (bv 137 130 52 60 46 27 92 85))
+    (is (opcode-name (ws-opcode ws)) :ping)
+    (is (get-output-stream-string body) "hi")))
+
+(subtest ":pong frame"
+  (let* ((ws (make-ws))
+         (body (make-string-output-stream))
+         (parser (make-parser ws
+                              :require-masking nil
+                              :pong-callback
+                              (lambda (payload)
+                                (princ (utf-8-bytes-to-string payload) body)))))
+    (funcall parser (bv 138 0))
+    (is (opcode-name (ws-opcode ws)) :pong)
+    (is (get-output-stream-string body) "")
+
+    (funcall parser (bv 138 2 104 105))
+    (is (opcode-name (ws-opcode ws)) :pong)
+    (is (get-output-stream-string body) "hi"))
+
+  (let* ((ws (make-ws))
+         (body (make-string-output-stream))
+         (parser (make-parser ws
+                              :require-masking t
+                              :pong-callback
+                              (lambda (payload)
+                                (princ (utf-8-bytes-to-string payload) body)))))
+    (funcall parser (bv 138 128 111 74 3 218))
+    (is (opcode-name (ws-opcode ws)) :pong)
+    (is (get-output-stream-string body) "")
+
+    (funcall parser (bv 138 130 149 39 57 220 253 78))
+    (is (opcode-name (ws-opcode ws)) :pong)
+    (is (get-output-stream-string body) "hi")))
+
 (finalize)
