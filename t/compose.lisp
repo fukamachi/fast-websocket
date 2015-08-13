@@ -5,11 +5,13 @@
         :fast-websocket-test.util
         :trivial-utf-8
         :prove)
+  (:import-from :fast-websocket.compose
+                #:random-mask-keys)
   (:import-from :fast-websocket
                 #:error-code))
 (in-package :fast-websocket-test.compose)
 
-(plan 4)
+(plan 5)
 
 (subtest "string"
   (is (compose-frame "hi") #(129 2 104 105) :test #'equalp)
@@ -47,5 +49,12 @@
 
     (setf (fdefinition 'fast-websocket.compose::random-mask-keys)
           original)))
+
+(subtest "random-mask-keys"
+  (is-type (random-mask-keys) '(simple-array (unsigned-byte 8) (4))
+           "mask keys must be simple octets (4 length)")
+  (isnt (random-mask-keys) (random-mask-keys)
+        :test #'equalp
+        "mask keys must be different every time"))
 
 (finalize)
