@@ -10,7 +10,7 @@
         :prove))
 (in-package :fast-websocket-test.parser)
 
-(plan 6)
+(plan 7)
 
 (defvar *masked*
   (bv #x81 #x85 #x37 #xfa #x21 #x3d #x7f #x9f #x4d #x51 #x58))
@@ -122,5 +122,17 @@
     (is (ws-fin ws) t)
     (is (opcode-name (ws-opcode ws)) :ping)
     (is (utf-8-bytes-to-string body) "Hello")))
+
+(subtest "close"
+  (let* ((ws (make-ws))
+         body
+         (parser (make-ll-parser ws
+                                 :require-masking nil
+                                 :payload-callback
+                                 (lambda (data &key start end)
+                                   (setf body (subseq data start end))))))
+    (funcall parser (bv 136 5 3 232 98 121 101))
+    (is body #(3 232 98 121 101) :test #'equalp)
+    (is (utf-8-bytes-to-string body :start 2) "bye")))
 
 (finalize)

@@ -26,7 +26,11 @@
 (subtest "close"
   (is (compose-frame "bye" :type :close :code (error-code :normal-closure))
       #(136 5 3 232 98 121 101)
-      :test #'equalp))
+      :test #'equalp)
+  (is (compose-frame "bye" :type :close)
+      #(136 5 3 232 98 121 101)
+      :test #'equalp
+      ":code is missing. The default status code is :normal-closure"))
 
 (defun constant-random-mask-keys ()
   (bv 186 43 99 37))
