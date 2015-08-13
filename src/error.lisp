@@ -9,6 +9,7 @@
            #:protocol-error
            #:too-large
            #:unacceptable
+           #:encoding-error
 
            #:error-code
            #:error-code-name

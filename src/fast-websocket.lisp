@@ -11,8 +11,13 @@
                 #:fast-write-masked-sequence
                 #:mask-message)
   (:import-from :fast-websocket.error
+                #:websocket-error
+                #:websocket-parse-error
                 #:protocol-error
+                #:too-large
+                #:unacceptable
                 #:encoding-error
+
                 #:acceptable-error-code-p
                 #:error-code)
   (:import-from :fast-io
@@ -34,6 +39,14 @@
            #:ws-stage
            #:opcode
            #:opcode-name
+
+           ;; errors
+           #:websocket-error
+           #:websocket-parse-error
+           #:protocol-error
+           #:too-large
+           #:unacceptable
+           #:encoding-error
            #:error-code))
 (in-package :fast-websocket)
 
