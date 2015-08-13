@@ -18,6 +18,7 @@
   :components ((:module "t"
                 :components
                 ((:test-file "parser")
+                 (:test-file "compose")
                  (:test-file "payload")
                  (:test-file "fast-websocket")
                  (:file "benchmark")
