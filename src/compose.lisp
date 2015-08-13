@@ -18,15 +18,21 @@
     (dotimes (i 4 keys)
       (setf (aref keys i) (random 256)))))
 
-(defun compose-frame (data &key type code masking)
+(defun compose-frame (data &key start end type code masking)
+  (setq start (or start 0)
+        end (or end (length data)))
+
   (unless type
     (setq type (if (stringp data) :text :binary)))
 
   (when (stringp data)
-    (setq data (string-to-utf-8-bytes data)))
+    ;; XXX: trivial-utf-8 doesn't seem to take 'start' and 'end'. Using subseq instead.
+    (setq data (string-to-utf-8-bytes (subseq data start end)))
+    (setq start 0
+          end (length data)))
 
   (let ((opcode (opcode type))
-        (length (+ (length data) (if code 2 0)))
+        (length (+ (- end start) (if code 2 0)))
         (masked (if masking
                     +mask+
                     0)))
@@ -50,16 +56,26 @@
          (fast-write-byte (logand (ash length -8) +byte+) frame)
          (fast-write-byte (logand length +byte+) frame)))
 
-      (when code
-        (setq data
-              (concatenate '(vector (unsigned-byte 8))
-                           (list (logand (ash code -8) +byte+)
-                                 (logand code +byte+))
-                           data)))
-
-      (when masking
-        (let ((mask-keys (random-mask-keys)))
-          (fast-write-sequence mask-keys frame)
-          (mask-message data mask-keys)))
-
-      (fast-write-sequence data frame))))
+      (if masking
+          (let ((mask-keys (random-mask-keys)))
+            (fast-write-sequence mask-keys frame)
+            (if code
+                ;; Add 'code' in front of the data
+                (setq data
+                      (let ((new-data (make-array length :element-type '(unsigned-byte 8))))
+                        (replace new-data data
+                                 :start1 2
+                                 :start2 start
+                                 :end2 end)
+                        (setf (aref new-data 0) (logand (ash code -8) +byte+)
+                              (aref new-data 1) (logand code +byte+))
+                        new-data))
+                ;; Call 'subseq' anyway for preventing from rewriting DATA in 'mask-message'.
+                (setq data (subseq data start end)))
+            (mask-message data mask-keys)
+            (fast-write-sequence data frame))
+          (progn
+            (when code
+              (fast-write-byte (logand (ash code -8) +byte+) frame)
+              (fast-write-byte (logand code +byte+) frame))
+            (fast-write-sequence data frame))))))
