@@ -11,7 +11,7 @@
                 #:error-code))
 (in-package :fast-websocket-test.compose)
 
-(plan 5)
+(plan 6)
 
 (subtest "string"
   (is (compose-frame "hi") #(129 2 104 105) :test #'equalp)
@@ -31,6 +31,19 @@
       #(136 5 3 232 98 121 101)
       :test #'equalp
       ":code is missing. The default status code is :normal-closure"))
+
+(subtest "length > 125 / length > 65535"
+  (flet ((xxx-frame-len (count)
+           (length (compose-frame
+                    (with-output-to-string (out)
+                      (dotimes (i count)
+                        (write-char #\x out)))))))
+    (is (xxx-frame-len 124) 126)
+    (is (xxx-frame-len 125) 127)
+    (is (xxx-frame-len 126) 130)
+    (is (xxx-frame-len 65534) 65538)
+    (is (xxx-frame-len 65535) 65539)
+    (is (xxx-frame-len 65536) 65546)))
 
 (defun constant-random-mask-keys ()
   (bv 186 43 99 37))
