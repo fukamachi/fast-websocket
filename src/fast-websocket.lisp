@@ -93,31 +93,27 @@
                        (acceptable-error-code-p code))
              (setq code (error-code :protocol-error)))
 
-           (cond
-             ((and has-code
-                   (ws-mask ws))
-              (let ((reason (subseq payload (+ start 2) end)))
-                (mask-message reason (ws-masking-key ws))
-                (funcall close-callback reason :start 0 :end (length reason) :code code)))
-             (has-code
-              (funcall close-callback payload :start (+ start 2) :end end :code code))
-             (t (funcall close-callback (make-array 0 :element-type '(unsigned-byte 8))
-                         :start 0 :end 0
-                         :code code)))))
+           (if has-code
+               (let ((reason (subseq payload (+ start 2) end)))
+                 (when (ws-mask ws)
+                   (mask-message reason (ws-masking-key ws)))
+                 (funcall close-callback reason :code code))
+               (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
+                        :code code))))
         (:ping
          (when ping-callback
-           (funcall (the function ping-callback) payload :start start :end end)))
+           (funcall (the function ping-callback) (subseq payload start end))))
         (:pong
          (when pong-callback
-           (funcall (the function pong-callback) payload :start start :end end)))))))
+           (funcall (the function pong-callback) (subseq payload start end))))))))
 
 (defun make-parser (ws &key
                          (require-masking t)
                          (max-length #x3ffffff)
                          message-callback  ;; (message)
-                         ping-callback     ;; (payload &key start end)
-                         pong-callback     ;; (payload &key start end)
-                         close-callback    ;; (payload &key start end code)
+                         ping-callback     ;; (payload)
+                         pong-callback     ;; (payload)
+                         close-callback    ;; (payload &key code)
                          error-callback)   ;; (code reason)
   (declare (type (or null function) error-callback))
   (let ((parser

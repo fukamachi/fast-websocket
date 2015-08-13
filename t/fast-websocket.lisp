@@ -51,9 +51,9 @@
          (parser (make-parser ws
                               :require-masking nil
                               :close-callback
-                              (lambda (message &key start end code)
+                              (lambda (message &key code)
                                 (setq got-code code)
-                                (princ (utf-8-bytes-to-string message :start start :end end) body)))))
+                                (princ (utf-8-bytes-to-string message) body)))))
     (funcall parser (bv 136 5 3 232 98 121 101))
     (is (ws-opcode ws) (opcode :close))
     (is (get-output-stream-string body) "bye")
