@@ -30,11 +30,8 @@ addons:
 
 install:
   # Install Roswell
-  - if ! $(which ros >/dev/null); then
-      curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh;
-    else
-      ros -e '(ql:update-all-dists :prompt nil)';
-    fi
+  - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
+  - ros -e '(ql:update-all-dists :prompt nil)'
   - ros install prove
 
 cache:
