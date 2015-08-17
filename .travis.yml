@@ -1,16 +1,32 @@
 language: common-lisp
-
 sudo: false
 
 env:
   global:
     - PATH=~/.roswell/bin:$PATH
-    - ROSWELL_BRANCH=release
+    - ROSWELL_BRANCH=master
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
     - COVERAGE_EXCLUDE=t/:src/error.lisp
   matrix:
     - LISP=sbcl-bin COVERALLS=true
     - LISP=ccl-bin
+    - LISP=abcl
+    - LISP=clisp
+    - LISP=ecl
+    - LISP=allegro
+    - LISP=cmucl
+
+matrix:
+  allow_failures:
+    # 'clisp' requires 'sudo' because it's not in the whitelist of APT packages.
+    - env: LISP=clisp
+
+addons:
+  apt:
+    packages:
+      - libc6-i386
+      - openjdk-7-jre
+      - clisp
 
 install:
   # Install Roswell
