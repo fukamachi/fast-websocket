@@ -1,5 +1,5 @@
 language: common-lisp
-sudo: required
+sudo: false
 
 env:
   global:
@@ -11,15 +11,12 @@ env:
     - LISP=sbcl-bin COVERALLS=true
     - LISP=ccl-bin
     - LISP=abcl
-    - LISP=clisp
     - LISP=ecl
-    - LISP=allegro
-    - LISP=cmucl
+    - LISP=clisp
 
 matrix:
   allow_failures:
-    - env: LISP=allegro
-    - env: LISP=cmucl
+    - env: LISP=clisp
 
 addons:
   apt:
@@ -36,6 +33,11 @@ install:
   - ros -e '(ql:update-all-dists :prompt nil)'
   - git clone https://github.com/rpav/fast-io ~/lisp/fast-io
   - ros install prove
+
+cache:
+  directories:
+    - $HOME/.roswell
+    - $HOME/.config/common-lisp
 
 script:
   - run-prove fast-websocket-test.asd
