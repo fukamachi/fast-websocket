@@ -29,6 +29,7 @@ addons:
       - clisp
       - libc6-dev-i386
       - libffi-dev:i386
+      - libgcc4:i386
 
 install:
   # Install Roswell
