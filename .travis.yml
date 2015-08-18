@@ -1,5 +1,5 @@
 language: common-lisp
-sudo: false
+sudo: required
 
 env:
   global:
@@ -18,8 +18,6 @@ env:
 
 matrix:
   allow_failures:
-    # 'clisp' requires 'sudo' because it's not in the whitelist of APT packages.
-    - env: LISP=clisp
     - env: LISP=allegro
     - env: LISP=cmucl
 
@@ -37,11 +35,6 @@ install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
   - ros -e '(ql:update-all-dists :prompt nil)'
   - ros install prove
-
-cache:
-  directories:
-    - $HOME/.roswell
-    - $HOME/.config/common-lisp
 
 script:
   - run-prove fast-websocket-test.asd
