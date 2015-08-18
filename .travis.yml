@@ -30,7 +30,7 @@ addons:
       - openjdk-7-jre
       - clisp
       - libc6-dev-i386
-      - libffi-dev
+      - libffi-dev:i386
 
 install:
   # Install Roswell
