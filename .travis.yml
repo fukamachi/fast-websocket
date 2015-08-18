@@ -20,11 +20,12 @@ addons:
       - openjdk-7-jre
       - clisp
       - libc6-dev-i386
-      - libffi-dev
+      - libffi-dev:i386
 
 install:
   # Install cl-travis
   - curl https://raw.githubusercontent.com/luismbo/cl-travis/master/install.sh | bash
+  - git clone -b clisp https://github.com/fukamachi/fast-io ~/lisp/fast-io
 
 script:
   - cl -l prove -l uiop -e '(or (prove:run :fast-websocket-test) (uiop:quit -1))'
