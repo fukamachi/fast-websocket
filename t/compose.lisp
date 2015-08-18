@@ -48,6 +48,7 @@
 (defun constant-random-mask-keys ()
   (bv 186 43 99 37))
 
+#-ecl
 (subtest "masking"
   (let ((original #'fast-websocket.compose::random-mask-keys))
     (setf (fdefinition 'fast-websocket.compose::random-mask-keys)
@@ -66,6 +67,8 @@
 
     (setf (fdefinition 'fast-websocket.compose::random-mask-keys)
           original)))
+#+ecl
+(skip 1 "because replacing a function doesn't work on ECL")
 
 (subtest "random-mask-keys"
   (is-type (random-mask-keys) '(simple-array (unsigned-byte 8) (4))
