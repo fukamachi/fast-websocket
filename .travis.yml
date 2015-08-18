@@ -20,6 +20,8 @@ matrix:
   allow_failures:
     # 'clisp' requires 'sudo' because it's not in the whitelist of APT packages.
     - env: LISP=clisp
+    - env: LISP=allegro
+    - env: LISP=cmucl
 
 addons:
   apt:
