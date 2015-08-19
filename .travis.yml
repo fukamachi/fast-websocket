@@ -1,5 +1,5 @@
 language: common-lisp
-sudo: false
+sudo: required
 
 env:
   global:
@@ -14,18 +14,10 @@ env:
     - LISP=ecl
     - LISP=clisp
 
-matrix:
-  allow_failures:
-    - env: LISP=clisp
-
 addons:
   apt:
     packages:
-      - libc6-i386
-      - openjdk-7-jre
-      - clisp
-      - libc6-dev-i386
-      - libffi-dev:i386
+      - default-jre
 
 install:
   # Install Roswell
