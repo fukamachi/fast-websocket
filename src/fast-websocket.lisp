@@ -109,12 +109,10 @@
              (setq code (error-code :protocol-error)))
 
            (if has-code
-               (progn
-                 (print (subseq payload (+ start 2) end))
                (let ((reason (utf-8-bytes-to-string payload :start (+ start 2) :end end)))
                  (when (ws-mask ws)
                    (mask-message reason (ws-masking-key ws)))
-                 (funcall close-callback reason :code code)))
+                 (funcall close-callback reason :code code))
                (funcall close-callback "" :code code))))
         (:ping
          (when ping-callback
