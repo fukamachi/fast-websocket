@@ -72,6 +72,23 @@
     (is (get-output-stream-string body) "bye")
     (is (error-code-name got-code) :normal-closure)))
 
+
+(subtest "masked :close frame"
+  (let* ((ws (make-ws))
+         got-code
+         (body (make-string-output-stream))
+         (parser (make-parser ws
+                              :require-masking t
+                              :close-callback
+                              (lambda (message &key code)
+                                (setq got-code code)
+                                (princ (utf-8-bytes-to-string message) body)))))
+    (funcall parser (bv 136 133 10 11 12 13 9 227 110 116 111))
+    (is (opcode-name (ws-opcode ws)) :close)
+    (is (get-output-stream-string body) "bye")
+    (is (error-code-name got-code) :normal-closure)))
+
+
 (subtest ":ping frame"
   (let* ((ws (make-ws))
          (body (make-string-output-stream))

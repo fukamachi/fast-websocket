@@ -98,10 +98,14 @@
                             (subseq payload start end))))
              (fast-write-sequence payload buffer start end)))
         (:close
-         (let* ((length (- end start))
+         (let* ((payload (subseq payload start end))
+                (payload (if (ws-mask ws)
+                           (mask-message payload (ws-masking-key ws))
+                           payload))
+                (length (- end start))
                 (has-code (<= 2 length))
                 (code (if has-code
-                          (+ (* 256 (aref payload start)) (aref payload (1+ start)))
+                          (+ (* 256 (aref payload 0)) (aref payload 1))
                           nil)))
            (declare (type integer length))
            (unless (or (zerop length)
@@ -109,9 +113,7 @@
              (setq code (error-code :protocol-error)))
 
            (if has-code
-               (let ((reason (subseq payload (+ start 2) end)))
-                 (when (ws-mask ws)
-                   (mask-message reason (ws-masking-key ws)))
+               (let ((reason (subseq payload 2 length)))
                  (funcall close-callback reason :code code))
                (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
                         :code code))))
