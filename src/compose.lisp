@@ -16,10 +16,13 @@
   (:export #:compose-frame))
 (in-package :fast-websocket.compose)
 
+(defparameter *mask-random-state*
+  (make-random-state t))
+
 (defun random-mask-keys ()
   (let ((keys (make-array 4 :element-type '(unsigned-byte 8))))
     (dotimes (i 4 keys)
-      (setf (aref keys i) (random 256)))))
+      (setf (aref keys i) (random 256 *mask-random-state*)))))
 
 (defun compose-frame (data &key start end type code masking)
   (setq start (or start 0)
