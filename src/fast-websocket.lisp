@@ -113,10 +113,9 @@
              (setq code (error-code :protocol-error)))
 
            (if has-code
-               (let ((reason (subseq payload 2 length)))
-                 (funcall close-callback reason :code code))
-               (funcall close-callback #.(make-array 0 :element-type '(unsigned-byte 8))
-                        :code code))))
+             (let ((reason (utf-8-bytes-to-string payload :start 2)))
+               (funcall close-callback reason :code code))
+             (funcall close-callback "" :code code))))
         (:ping
          (when ping-callback
            (let ((payload (subseq payload start end)))
