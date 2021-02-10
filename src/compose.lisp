@@ -11,8 +11,8 @@
                 #:with-fast-output
                 #:fast-write-sequence
                 #:fast-write-byte)
-  (:import-from :trivial-utf-8
-                #:string-to-utf-8-bytes)
+  (:import-from :babel
+                #:string-to-octets)
   (:export #:compose-frame))
 (in-package :fast-websocket.compose)
 
@@ -38,8 +38,8 @@
         (setq code (error-code :normal-closure))))
 
   (when (stringp data)
-    ;; XXX: trivial-utf-8 doesn't seem to take 'start' and 'end'. Using subseq instead.
-    (setq data (string-to-utf-8-bytes (subseq data start end)))
+    (setq data (babel:string-to-octets
+                data :encoding :utf-8 :start start :end end))
     (setq start 0
           end (length data)))
 
