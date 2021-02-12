@@ -24,9 +24,9 @@
                 #:make-output-buffer
                 #:finish-output-buffer
                 #:fast-write-sequence)
-  (:import-from :trivial-utf-8
-                #:utf-8-bytes-to-string
-                #:utf-8-decoding-error)
+  (:import-from :babel
+                #:octets-to-string
+                #:character-decoding-error)
   (:export #:make-parser
            #:compose-frame
            #:ws
@@ -70,8 +70,8 @@
                (funcall (the function message-callback)
                         (if (eq (ws-mode ws) :text)
                             (handler-case
-                                (utf-8-bytes-to-string message)
-                              (utf-8-decoding-error ()
+                                (octets-to-string message :encoding :utf-8)
+                              (character-decoding-error ()
                                 (error 'encoding-error)))
                             message))))))
         (:text
@@ -80,12 +80,14 @@
                (handler-case
                    (funcall (the function message-callback)
                             (if (ws-mask ws)
-                                (utf-8-bytes-to-string
+                                (octets-to-string
                                  (let ((payload (subseq payload start end)))
-                                   (mask-message payload (ws-masking-key ws))))
-                                (utf-8-bytes-to-string payload
-                                                       :start start :end end)))
-                 (utf-8-decoding-error ()
+                                   (mask-message payload (ws-masking-key ws)))
+                                 :encoding :utf-8)
+                                (octets-to-string payload
+                                                  :encoding :utf-8
+                                                  :start start :end end)))
+                 (character-decoding-error ()
                    (error 'encoding-error))))
              (fast-write-sequence payload buffer start end)))
         (:binary
@@ -113,7 +115,7 @@
              (setq code (error-code :protocol-error)))
 
            (if has-code
-             (let ((reason (utf-8-bytes-to-string payload :start 2)))
+             (let ((reason (octets-to-string payload :encoding :utf-8 :start 2)))
                (funcall close-callback reason :code code))
              (funcall close-callback "" :code code))))
         (:ping
