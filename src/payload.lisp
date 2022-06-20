@@ -14,7 +14,7 @@
   (logxor byte mask-key))
 
 (defvar *mask-key-indices*
-  (let ((indices '(0 1 2 3)))
+  (let ((indices (list 0 1 2 3)))
     (rplacd (last indices) indices)
     indices))
 
