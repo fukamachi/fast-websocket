@@ -60,11 +60,12 @@
                (type integer start end))
       (ecase (opcode-name (ws-opcode ws))
         (:continuation
-         (fast-write-sequence payload buffer start end)
+         (let ((payload (subseq payload start end)))
+	   (if (ws-mask ws)
+	       (mask-message payload (ws-masking-key ws)))
+           (fast-write-sequence payload buffer))
          (when (ws-fin ws)
            (let ((message (finish-output-buffer buffer)))
-             (when (ws-mask ws)
-               (mask-message message (ws-masking-key ws)))
              (setf buffer (make-output-buffer))
              (when message-callback
                (funcall (the function message-callback)
@@ -89,7 +90,10 @@
                                                   :start start :end end)))
                  (character-decoding-error ()
                    (error 'encoding-error))))
-             (fast-write-sequence payload buffer start end)))
+             (let ((payload (subseq payload start end)))
+	       (if (ws-mask ws)
+		   (mask-message payload (ws-masking-key ws)))
+               (fast-write-sequence payload buffer))))
         (:binary
          (if (ws-fin ws)
              (when message-callback
@@ -98,7 +102,10 @@
                             (let ((payload (subseq payload start end)))
                               (mask-message payload (ws-masking-key ws)))
                             (subseq payload start end))))
-             (fast-write-sequence payload buffer start end)))
+             (let ((payload (subseq payload start end)))
+	       (if (ws-mask ws)
+		   (mask-message payload (ws-masking-key ws)))
+	       (fast-write-sequence payload buffer))))
         (:close
          (let* ((payload (subseq payload start end))
                 (payload (if (ws-mask ws)
