@@ -154,11 +154,8 @@
              (funcall (the function payload-callback)
                       data
                       :start i
-                      :end next-end))
-
-           (when (and (ws-fin ws)
-                      (= (ws-opcode ws) #.(opcode :continuation)))
-             (setf (ws-mode ws) nil))
+                      :end next-end
+                      :partial-frame read-a-part))
 
            (if read-a-part
                (progn
@@ -168,6 +165,10 @@
                  (setf (ws-stage ws) 0)
 
                  (setq i next-end)
+
+                 (when (and (ws-fin ws)
+                            (= (ws-opcode ws) #.(opcode :continuation)))
+                   (setf (ws-mode ws) nil))
 
                  (unless (= i end)
                    (go parsing-first-byte)))))
