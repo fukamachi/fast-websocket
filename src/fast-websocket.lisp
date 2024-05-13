@@ -54,16 +54,17 @@
   (declare (type (or null function)
                  message-callback ping-callback pong-callback close-callback))
   (let ((buffer (make-output-buffer)))
-    (lambda (payload &key (start 0) (end (length payload)))
+    (lambda (payload &key (start 0) (end (length payload)) partial-frame)
       (declare (optimize (speed 3) (safety 2))
                (type (simple-array (unsigned-byte 8) (*)) payload)
                (type integer start end))
       (ecase (opcode-name (ws-opcode ws))
+
         (:continuation
          (when (ws-mask ws)
            (mask-message payload (ws-masking-key ws) start end))
          (fast-write-sequence payload buffer start end)
-         (when (ws-fin ws)
+         (when (and (ws-fin ws) (not partial-frame))
            (let ((message (finish-output-buffer buffer)))
              (setf buffer (make-output-buffer))
              (when message-callback
@@ -75,7 +76,7 @@
                                 (error 'encoding-error)))
                             message))))))
         (:text
-         (if (ws-fin ws)
+         (if (and (ws-fin ws) (not partial-frame))
              (when message-callback
                (handler-case
                    (funcall (the function message-callback)
@@ -94,7 +95,7 @@
                  (mask-message payload (ws-masking-key ws) start end))
                (fast-write-sequence payload buffer start end))))
         (:binary
-         (if (ws-fin ws)
+         (if (and (ws-fin ws) (not partial-frame))
              (when message-callback
                (funcall message-callback
                         (if (ws-mask ws)
