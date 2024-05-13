@@ -32,6 +32,6 @@
   (with-masking (byte data :start start :end end :mask-keys mask-keys)
     (fast-write-byte byte output-buffer)))
 
-(defun mask-message (data mask-keys)
-  (with-masking (byte data :start 0 :end (length data) :i i :mask-keys mask-keys)
+(defun mask-message (data mask-keys &optional (start 0) (end (length data)))
+  (with-masking (byte data :start start :end end :i i :mask-keys mask-keys)
     (setf (aref data i) byte)))
